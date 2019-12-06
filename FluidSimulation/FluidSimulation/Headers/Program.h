@@ -1,5 +1,4 @@
-#ifndef Program_h
-#define Program_h
+#pragma once
 
 #include <glad/glad.h>
 
@@ -101,5 +100,3 @@ public:
         glDeleteShader(fs);
     }
 };
-
-#endif /* Program_h */

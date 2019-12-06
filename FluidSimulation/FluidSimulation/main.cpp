@@ -8,10 +8,13 @@
 #include <iostream>
 #include <cmath>
 
-#include "Headers/Program.h"
+#include "Headers/Fluid.h"
+#include "Headers/Display.h"
 
 #define WIDTH 800
 #define HEIGHT 800
+
+#define TIME_STEP 0.1
 
 /** Functions **/
 void processInput(GLFWwindow *window);
@@ -25,6 +28,10 @@ void cursor_pos_callback(GLFWwindow *window, double xpos, double ypos);
 // Window and world
 GLFWwindow *window;
 glm::vec3 bgColor(100.0/255, 50.0/255, 60.0/255);
+// Fluid
+Boundary boundary(Vec3(-10, -10, 10), Vec3(20, 20, 20));
+Fluid fluid(boundary, Vec3(5, 5, 5), Vec3(5, 5, 5), Vec3(2, -2, 3));
+Vec3 gravity(0, -1, 0);
 
 int main(int argc, const char * argv[])
 {
@@ -81,7 +88,7 @@ int main(int argc, const char * argv[])
         
         /** -------------------------------- Simulation & Rendering -------------------------------- **/
         
-        
+        fluid.update(TIME_STEP, gravity);
         
         /** -------------------------------- Simulation & Rendering -------------------------------- **/
         

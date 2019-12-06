@@ -27,6 +27,14 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		CA6028CD2393E78B00DF7A46 /* Particle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Particle.h; sourceTree = "<group>"; };
+		CA6028CE2393E96100DF7A46 /* Vector.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Vector.h; sourceTree = "<group>"; };
+		CA6028D02394D85300DF7A46 /* Fluid.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Fluid.h; sourceTree = "<group>"; };
+		CA7915AF23963A69009A6690 /* FluidVS.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = FluidVS.glsl; sourceTree = "<group>"; };
+		CA7915B023963A77009A6690 /* FluidFS.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = FluidFS.glsl; sourceTree = "<group>"; };
+		CA7915B123964785009A6690 /* Display.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Display.h; sourceTree = "<group>"; };
+		CA7915B223964DBD009A6690 /* stb_image.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stb_image.h; sourceTree = "<group>"; };
+		CA7915B42399C50B009A6690 /* tex1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = tex1.jpg; sourceTree = "<group>"; };
 		CAB8982D2393C65E001103FE /* FluidSimulation */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FluidSimulation; sourceTree = BUILT_PRODUCTS_DIR; };
 		CAB898302393C65E001103FE /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		CAB898372393C694001103FE /* glad.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glad.c; sourceTree = "<group>"; };
@@ -51,6 +59,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		CA7915B32399C3F5009A6690 /* Textures */ = {
+			isa = PBXGroup;
+			children = (
+				CA7915B42399C50B009A6690 /* tex1.jpg */,
+			);
+			path = Textures;
+			sourceTree = "<group>";
+		};
 		CAB898242393C65E001103FE = {
 			isa = PBXGroup;
 			children = (
@@ -76,6 +92,7 @@
 				CAB898372393C694001103FE /* glad.c */,
 				CAB898422393C884001103FE /* Headers */,
 				CAB898432393C893001103FE /* Shaders */,
+				CA7915B32399C3F5009A6690 /* Textures */,
 			);
 			path = FluidSimulation;
 			sourceTree = "<group>";
@@ -93,7 +110,12 @@
 		CAB898422393C884001103FE /* Headers */ = {
 			isa = PBXGroup;
 			children = (
+				CA6028CE2393E96100DF7A46 /* Vector.h */,
+				CA6028CD2393E78B00DF7A46 /* Particle.h */,
+				CA6028D02394D85300DF7A46 /* Fluid.h */,
+				CA7915B223964DBD009A6690 /* stb_image.h */,
 				CAB898442393C9A8001103FE /* Program.h */,
+				CA7915B123964785009A6690 /* Display.h */,
 			);
 			path = Headers;
 			sourceTree = "<group>";
@@ -101,6 +123,8 @@
 		CAB898432393C893001103FE /* Shaders */ = {
 			isa = PBXGroup;
 			children = (
+				CA7915AF23963A69009A6690 /* FluidVS.glsl */,
+				CA7915B023963A77009A6690 /* FluidFS.glsl */,
 			);
 			path = Shaders;
 			sourceTree = "<group>";
