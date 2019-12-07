@@ -99,7 +99,7 @@ public:
         
         /** Model Matrix : Put cloth into the world **/
         glm::mat4 uniModelMatrix = glm::mat4(1.0f);
-        uniModelMatrix = glm::translate(uniModelMatrix, glm::vec3(fluid->boundary.position.x, fluid->boundary.position.y, fluid->boundary.position.z));
+        uniModelMatrix = glm::translate(uniModelMatrix, glm::vec3(fluid->boundary->position.x, fluid->boundary->position.y, fluid->boundary->position.z));
         glUniformMatrix4fv(glGetUniformLocation(programID, "uniModelMatrix"), 1, GL_FALSE, &uniModelMatrix[0][0]);
         
         /** Light **/
@@ -129,6 +129,11 @@ public:
     
     void flush()
     {
+        for (int i = 0; i < numParticles; i ++) {
+            Particle* p = fluid->particles[i];
+            vboPos[i] = glm::vec3(p->position.x, p->position.y, p->position.z);
+        }
+        
         glUseProgram(programID);
         
         glBindVertexArray(vaoID);
@@ -144,7 +149,7 @@ public:
         glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         
         /** Draw **/
-        glPointSize(4);
+        glPointSize(6);
         glDrawArrays(GL_POINTS, 0, numParticles);
         
         // End flushing

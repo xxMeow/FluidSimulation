@@ -28,6 +28,11 @@ struct Boundary
         yMax = position.y + size.y;
         zMin = position.z;
         zMax = position.z + size.z;
+        
+        printf("Boundary:\n");
+        printf("\tx(%f, %f) -> %f\n", xMin, xMax, size.x);
+        printf("\ty(%f, %f) -> %f\n", yMin, yMax, size.y);
+        printf("\tz(%f, %f) -> %f\n", zMin, zMax, size.z);
     }
     ~Boundary() { }
 };
@@ -38,34 +43,53 @@ private:
     const int resolution = 2; // TODO: Renaming - resolution? particleRadius?
     const int iterationFreq = 10;
     const int gasConst = 50;
-    static const int gridSize = 40;
-    static const int hashSize = 42; // = gridSize + 2
     const double restDensity = 4.2;
     const double viscosity = 0.8;
     const double kernelRadius = 1.0;
 public:
-    Boundary boundary;
+    Boundary* boundary;
     Vec3 position; // Left bottom back point's init position of fluid cube
     Vec3 size; // Size of fluid cube
     std::vector<Particle*> particles;
-    std::vector<Particle*> hashGrid[gridSize][gridSize][gridSize];
+    Vec3 gridSize;
+    std::vector< std::vector< std::vector< std::vector<Particle*> > > > hashGrid;
     
 public:
-    Fluid(Boundary boundary, Vec3 size, Vec3 posOffset, Vec3 initV) : boundary(boundary), size(size)
+    Fluid(Boundary* boundary, Vec3 size, Vec3 posOffset, Vec3 initV) : boundary(boundary), size(size)
     {
         if (size.x <= 0 || size.y <= 0 || size.z <= 0) {
             std::cout << "Fluid size can't be negative." << std::endl;
+            exit(-1);
+        }
+        if (posOffset.x < 0 || posOffset.y < 0 || posOffset.z < 0) {
+            std::cout << "Fluid offset can't be negative." << std::endl;
+            exit(-1);
         }
         
-        position = boundary.position + posOffset;
-        if (position.x < boundary.xMin || position.x+size.x > boundary.xMax ||
-            position.y < boundary.yMin || position.y+size.y > boundary.yMax ||
-            position.z < boundary.zMin || position.z+size.z > boundary.zMax)
+        // Initialize hash grids, each grid is a vector of Particle*
+        gridSize = boundary->size;
+        hashGrid.resize(gridSize.z);
+        for (int i = 0; i < gridSize.z; i ++) {
+            hashGrid[i].resize(gridSize.y);
+            for (int j = 0; j < gridSize.y; j ++) {
+                hashGrid[i][j].resize(gridSize.x);
+            }
+        }
+        
+        // Get the world coordinate of fluid
+        position = boundary->position + posOffset;
+        printf("Fluid:\n");
+        printf("\tx(%f, %f)\n", position.x, position.x+size.x);
+        printf("\ty(%f, %f)\n", position.y, position.y+size.y);
+        printf("\tz(%f, %f)\n", position.z, position.z+size.z);
+        if (position.x+size.x > boundary->xMax || position.y+size.y > boundary->yMax ||
+            position.z+size.z > boundary->zMax)
         {
             std::cout << "Fluid out of boundary." << std::endl;
+            exit(-1);
         }
         
-        init(initV);
+        initParticles(initV);
         
         std::cout << "Fluid : " << particles.size() << " Paricles" << std::endl;
         printf("\t(%f, %f, %f)\n", particles[0]->position.x, particles[0]->position.y, particles[0]->position.z);
@@ -81,26 +105,31 @@ public:
     
     void update(float timestep, Vec3 gravity)
     {
-        printf("Updating..\n");
-        printf("\tMaking Hash Table..\n");
+//        printf("Updating..\n");
+        
+//        printf("\tMaking Hash Table..\n");
         makeHashTable();
-        printf("\t(%f, %f, %f)\n", particles[0]->position.x, particles[0]->position.y, particles[0]->position.z);
-        printf("\tComputing Density..\n");
+//        printf("\t(%f, %f, %f)\n", particles[0]->position.x, particles[0]->position.y, particles[0]->position.z);
+        
+//        printf("\tComputing Density..\n");
         computeDensity();
-        printf("\t(%f, %f, %f)\n", particles[0]->position.x, particles[0]->position.y, particles[0]->position.z);
-        printf("\tComputing Force..\n");
+//        printf("\t(%f, %f, %f)\n", particles[0]->position.x, particles[0]->position.y, particles[0]->position.z);
+        
+//        printf("\tComputing Force..\n");
         computeForce();
-        printf("\t(%f, %f, %f)\n", particles[0]->position.x, particles[0]->position.y, particles[0]->position.z);
-        printf("\tIntegrating..\n");
+//        printf("\t(%f, %f, %f)\n", particles[0]->position.x, particles[0]->position.y, particles[0]->position.z);
+        
+//        printf("\tIntegrating..\n");
         integrate(timestep, gravity);
-        printf("\t(%f, %f, %f)\n", particles[0]->position.x, particles[0]->position.y, particles[0]->position.z);
+//        printf("\t(%f, %f, %f)\n", particles[0]->position.x, particles[0]->position.y, particles[0]->position.z);
     }
 
 private:
-    void init(Vec3 initV)
+    void initParticles(Vec3 initV)
     {
-        int index = 0;
+        int index = 0; // TODO: ?? necessery?
         double distInterval = 1.0 / resolution;
+        printf("Particle Interval: %f\n", distInterval);
         for (double z = position.z; z < position.z+size.z; z += distInterval) {
             for (double y = position.y; y < position.y+size.y; y += distInterval) {
                 for (double x = position.x; x < position.x+size.x; x += distInterval) {
@@ -113,20 +142,20 @@ private:
         }
     }
     
-    std::vector<Particle *> getNeighbors(int gridX, int gridY, int gridZ, std::vector<Particle*>& mine, double radius)
+    std::vector<Particle *> getNeighbors(int gridZ, int gridY, int gridX, std::vector<Particle*>& mine, double radius)
     {
         std::vector<Particle *> neighbors;
         mine.clear();
-        for (int i = gridX - (int)radius; i <= gridX + (int)radius; i ++) {
+        for (int i = gridZ - (int)radius; i <= gridZ + (int)radius; i ++) {
             for (int j = gridY - (int)radius; j <= gridY + (int)radius; j ++) {
-                for (int k = gridZ - (int)radius; k <= gridZ + (int)radius; k ++) {
-                    if (i < 0 || i >= gridSize || j < 0 || j >= gridSize || k < 0 || k >= gridSize)
+                for (int k = gridX - (int)radius; k <= gridX + (int)radius; k ++) {
+                    if (i < 0 || i >= gridSize.z || j < 0 || j >= gridSize.y || k < 0 || k >= gridSize.x)
                         continue;
 
                     for (int index = 0; index < hashGrid[i][j][k].size(); index ++) {
                         neighbors.push_back(hashGrid[i][j][k][index]);
 
-                        if (i == gridX && j == gridY && k == gridZ) { mine.push_back(hashGrid[i][j][k][index]);
+                        if (i == gridZ && j == gridY && k == gridX) { mine.push_back(hashGrid[i][j][k][index]);
                         }
                     }
                 }
@@ -136,9 +165,9 @@ private:
     }
     void makeHashTable() // TODO: how to slice grid? use boundary?
     {
-        for (int i = 0; i < gridSize; i ++) {
-            for (int j = 0; j < gridSize; j ++) {
-                for (int k = 0; k < gridSize; k ++) {
+        for (int i = 0; i < gridSize.z; i ++) {
+            for (int j = 0; j < gridSize.y; j ++) {
+                for (int k = 0; k < gridSize.x; k ++) {
                     hashGrid[i][j][k].clear();
                 }
             }
@@ -148,30 +177,27 @@ private:
         for (int i = 0; i < particles.size(); i ++)
         {
             Particle *p = particles[i];
-            double x = (p->position.x - boundary.xMin) / boundary.size.x * gridSize;
-            double y = (p->position.y - boundary.yMin) / boundary.size.y * gridSize;
-            double z = (p->position.z - boundary.zMin) / boundary.size.z * gridSize;
-            int gridX = (int)x;
-            int gridY = (int)y;
-            int gridZ = (int)z;
+            int gridX = (int)(p->position.x - boundary->position.x);
+            int gridY = (int)(p->position.y - boundary->position.y);
+            int gridZ = (int)(p->position.z - boundary->position.z);
 
             if (gridX < 0) gridX = 0;
-            if (gridX >= gridSize) gridX = gridSize - 1;
+            if (gridX >= gridSize.x) gridX = gridSize.x - 1;
             if (gridY < 0) gridY = 0;
-            if (gridY >= gridSize) gridY = gridSize - 1;
+            if (gridY >= gridSize.y) gridY = gridSize.y - 1;
             if (gridZ < 0) gridZ = 0;
-            if (gridZ >= gridSize) gridZ = gridSize - 1;
+            if (gridZ >= gridSize.z) gridZ = gridSize.z - 1;
 
-            hashGrid[gridX][gridY][gridZ].push_back(p);
+            hashGrid[gridZ][gridY][gridX].push_back(p);
         }
     }
     void computeDensity()
     {
-        for (int x = 0; x < gridSize; x ++) {
-            for (int y = 0; y < gridSize; y ++) {
-                for (int z = 0; z < gridSize; z ++) {
+        for (int z = 0; z < gridSize.z; z ++) {
+            for (int y = 0; y < gridSize.y; y ++) {
+                for (int x = 0; x < gridSize.x; x ++) {
                     std::vector<Particle*> mine;
-                    std::vector<Particle*> neighbors = getNeighbors(x, y, z, mine, kernelRadius);
+                    std::vector<Particle*> neighbors = getNeighbors(z, y, x, mine, kernelRadius);
 
                     for (int i = 0; i < mine.size(); i++)
                     {
@@ -182,6 +208,8 @@ private:
                             Particle* pj = neighbors[j];
                             pi->density += pj->mass * poly6Kernel(pi->position - pj->position);
                         }
+                        
+//                        printf("[%d] Density: %f\n", pi->index, pi->density);
                     }
                 }
             }
@@ -189,11 +217,11 @@ private:
     }
     void computeForce()
     {
-        for (int x = 0; x < gridSize; x ++) {
-            for (int y = 0; y < gridSize; y ++) {
-                for (int z = 0; z < gridSize; z ++) {
+        for (int z = 0; z < gridSize.z; z ++) {
+            for (int y = 0; y < gridSize.y; y ++) {
+                for (int x = 0; x < gridSize.x; x ++) {
                     std::vector<Particle*> mine;
-                    std::vector<Particle*> neighbors = getNeighbors(x, y, z, mine, kernelRadius);
+                    std::vector<Particle*> neighbors = getNeighbors(z, y, x, mine, kernelRadius);
 
                     for (int i = 0; i < mine.size(); i ++)
                     {
@@ -202,13 +230,23 @@ private:
                         pi->fViscosity = Vec3(0, 0, 0);//compute with viscositylaplacianKernel
 
                         for (int j = 0; j < neighbors.size(); j ++) {
+                            double temp;
                             Particle* pj = neighbors[j];
-                            pi->fPressure += pj->mass * (gasConst * ((pi->density-restDensity) + pj->density-restDensity)) / (2.0 * pj->density) * spikyGradientKernel(pi->position - pj->position);
-                            pi->fViscosity += pj->mass * ((pi->velocity - pj->velocity) / pj->density) * viscosityLaplacianKernel(pi->position - pj->position);
+                            Vec3 spikyValue = spikyGradientKernel(pi->position - pj->position);
+                            temp = pj->mass * (gasConst * ((pi->density-restDensity) + pj->density - restDensity)) / (2.0 * pj->density);
+//                            printf("Spiky: %f, %f, %f  *  temp: %f\n", spikyValue.x, spikyValue.y, spikyValue.z, temp);
+                            pi->fPressure += spikyValue * temp;
+                            double laplacValue = viscosityLaplacianKernel(pi->position - pj->position);
+//                            printf("Laplac: %f\n", laplacValue);
+                            pi->fViscosity += pj->mass * ((pi->velocity - pj->velocity) / pj->density) * laplacValue;
+//                            printf("[%d] fPressure(%f, %f, %f)", pi->index, pi->fPressure.x, pi->fPressure.y, pi->fPressure.z);
+//                            printf(" fViscosity(%f, %f, %f)\n", pi->fViscosity.x, pi->fViscosity.y, pi->fViscosity.z);
                         }
                         
                         pi->fPressure = -1.0 * pi->fPressure;
+//                        printf("[%d] fPressure(%f, %f, %f)", pi->index, pi->fPressure.x, pi->fPressure.y, pi->fPressure.z);
                         pi->fViscosity = viscosity * pi->fViscosity;
+//                        printf(" fViscosity(%f, %f, %f)\n", pi->fViscosity.x, pi->fViscosity.y, pi->fViscosity.z);
                     }
                 }
             }
@@ -216,47 +254,49 @@ private:
     }
     void integrate(double timestep, Vec3 gravity)
     {
+//        printf("%f : (%f, %f, %f)\n", timestep, gravity.x, gravity.y, gravity.z);
         // Particle bondary check
         for (int i = 0; i < particles.size(); i++)
         {
             Particle *p = particles[i];
-            
+//            printf("[%d] (%f, %f, %f) -> ", p->index, p->position.x, p->position.y, p->position.z);
             Vec3 fGravity = p->mass * gravity;
             // Update velocity and position
             p->acceleration = (p->fPressure + p->fViscosity) / p->density + fGravity;
-            p->velocity = p->velocity + p->acceleration * timestep;
-            p->position = p->position + p->velocity * timestep;
-
-            // Boundary condition
-            if (p->position.x < boundary.xMin && p->velocity.x < 0.0)
+            p->velocity += p->acceleration * timestep;
+            p->position += p->velocity * timestep;
+//            printf("(%f, %f, %f)\n", p->position.x, p->position.y, p->position.z);
+            
+            /** Boundary Check **/
+            if (p->position.x < boundary->xMin && p->velocity.x < 0.0)
             {
                 p->velocity.x *= -(p->restitution);
-                p->position.x = boundary.xMin+0.1;
+                p->position.x = boundary->xMin+0.1;
             }
-            if (p->position.x > boundary.xMax && p->velocity.x > 0.0)
+            if (p->position.x > boundary->xMax && p->velocity.x > 0.0)
             {
                 p->velocity.x *= -(p->restitution);
-                p->position.x = boundary.xMax-0.1;
+                p->position.x = boundary->xMax-0.1;
             }
-            if (p->position.y < boundary.yMin && p->velocity.y < 0.0)
+            if (p->position.y < boundary->yMin && p->velocity.y < 0.0)
             {
                 p->velocity.y *= -(p->restitution);
-                p->position.y = boundary.yMin+0.1;
+                p->position.y = boundary->yMin+0.1;
             }
-            if (p->position.y > boundary.yMax && p->velocity.y > 0.0)
+            if (p->position.y > boundary->yMax && p->velocity.y > 0.0)
             {
                 p->velocity.y *= -(p->restitution);
-                p->position.y = boundary.yMax-0.1;
+                p->position.y = boundary->yMax-0.1;
             }
-            if (p->position.z < boundary.zMin && p->velocity.z < 0.0)
+            if (p->position.z < boundary->zMin && p->velocity.z < 0.0)
             {
                 p->velocity.z *= -(p->restitution);
-                p->position.z = boundary.zMin+0.1;
+                p->position.z = boundary->zMin+0.1;
             }
-            if (p->position.z > boundary.zMax && p->velocity.z > 0.0)
+            if (p->position.z > boundary->zMax && p->velocity.z > 0.0)
             {
                 p->velocity.z *= -(p->restitution);
-                p->position.z = boundary.zMax-0.1;
+                p->position.z = boundary->zMax-0.1;
             }
         }
     }
