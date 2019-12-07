@@ -7,5 +7,5 @@ uniform vec3 uniLightColor;
 
 void main()
 {
-    color = vec4(1, 1, 1, 1.0f);
+    color = vec4(1, 1, 1, 0.3f);
 }

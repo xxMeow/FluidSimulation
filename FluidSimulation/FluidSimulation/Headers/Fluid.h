@@ -43,7 +43,7 @@ private:
     const int resolution = 2; // TODO: Renaming - resolution? particleRadius?
     const int iterationFreq = 10;
     const int gasConst = 50;
-    const double restDensity = 4.2;
+    const double restDensity = 8;
     const double viscosity = 0.8;
     const double kernelRadius = 1.0;
 public:
@@ -141,28 +141,6 @@ private:
             }
         }
     }
-    
-    std::vector<Particle *> getNeighbors(int gridZ, int gridY, int gridX, std::vector<Particle*>& mine, double radius)
-    {
-        std::vector<Particle *> neighbors;
-        mine.clear();
-        for (int i = gridZ - (int)radius; i <= gridZ + (int)radius; i ++) {
-            for (int j = gridY - (int)radius; j <= gridY + (int)radius; j ++) {
-                for (int k = gridX - (int)radius; k <= gridX + (int)radius; k ++) {
-                    if (i < 0 || i >= gridSize.z || j < 0 || j >= gridSize.y || k < 0 || k >= gridSize.x)
-                        continue;
-
-                    for (int index = 0; index < hashGrid[i][j][k].size(); index ++) {
-                        neighbors.push_back(hashGrid[i][j][k][index]);
-
-                        if (i == gridZ && j == gridY && k == gridX) { mine.push_back(hashGrid[i][j][k][index]);
-                        }
-                    }
-                }
-            }
-        }
-        return neighbors;
-    }
     void makeHashTable() // TODO: how to slice grid? use boundary?
     {
         for (int i = 0; i < gridSize.z; i ++) {
@@ -190,6 +168,27 @@ private:
 
             hashGrid[gridZ][gridY][gridX].push_back(p);
         }
+    }
+    std::vector<Particle *> getNeighbors(int gridZ, int gridY, int gridX, std::vector<Particle*>& mine, double radius)
+    {
+        std::vector<Particle *> neighbors;
+        mine.clear();
+        for (int i = gridZ - (int)radius; i <= gridZ + (int)radius; i ++) {
+            for (int j = gridY - (int)radius; j <= gridY + (int)radius; j ++) {
+                for (int k = gridX - (int)radius; k <= gridX + (int)radius; k ++) {
+                    if (i < 0 || i >= gridSize.z || j < 0 || j >= gridSize.y || k < 0 || k >= gridSize.x)
+                        continue;
+
+                    for (int index = 0; index < hashGrid[i][j][k].size(); index ++) {
+                        neighbors.push_back(hashGrid[i][j][k][index]);
+
+                        if (i == gridZ && j == gridY && k == gridX) { mine.push_back(hashGrid[i][j][k][index]);
+                        }
+                    }
+                }
+            }
+        }
+        return neighbors;
     }
     void computeDensity()
     {

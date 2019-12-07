@@ -38,6 +38,8 @@
 		CA7915B5239AB834009A6690 /* Vertex.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Vertex.h; sourceTree = "<group>"; };
 		CA7915B7239AB98C009A6690 /* RigidVS.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = RigidVS.glsl; sourceTree = "<group>"; };
 		CA7915B8239AB999009A6690 /* RigidFS.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = RigidFS.glsl; sourceTree = "<group>"; };
+		CA7915B9239BFB8C009A6690 /* BoundaryVS.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = BoundaryVS.glsl; sourceTree = "<group>"; };
+		CA7915BA239BFB98009A6690 /* BoundaryFS.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = BoundaryFS.glsl; sourceTree = "<group>"; };
 		CAB8982D2393C65E001103FE /* FluidSimulation */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FluidSimulation; sourceTree = BUILT_PRODUCTS_DIR; };
 		CAB898302393C65E001103FE /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		CAB898372393C694001103FE /* glad.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glad.c; sourceTree = "<group>"; };
@@ -131,6 +133,8 @@
 				CA7915B023963A77009A6690 /* FluidFS.glsl */,
 				CA7915B7239AB98C009A6690 /* RigidVS.glsl */,
 				CA7915B8239AB999009A6690 /* RigidFS.glsl */,
+				CA7915B9239BFB8C009A6690 /* BoundaryVS.glsl */,
+				CA7915BA239BFB98009A6690 /* BoundaryFS.glsl */,
 			);
 			path = Shaders;
 			sourceTree = "<group>";
