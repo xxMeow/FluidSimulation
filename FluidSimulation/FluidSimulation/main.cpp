@@ -29,9 +29,14 @@ void cursor_pos_callback(GLFWwindow *window, double xpos, double ypos);
 GLFWwindow *window;
 glm::vec3 bgColor(100.0/255, 50.0/255, 60.0/255);
 // Fluid
-Boundary boundary(Vec3(-10, -10, 10), Vec3(20, 20, 20));
-Fluid fluid(boundary, Vec3(5, 5, 5), Vec3(5, 5, 5), Vec3(2, -2, 3));
+Boundary boundary(Vec3(0, 0, 0), Vec3(10, 10, 10));
+Fluid fluid(boundary, Vec3(5, 5, 5), Vec3(-2, 2, -2), Vec3(2, -2, 3));
 Vec3 gravity(0, -1, 0);
+// Ground
+Vec3 groundPos(-5, 1.5, 0);
+Vec2 groundSize(10, 10);
+glm::vec4 groundColor(0.8, 0.8, 0.8, 1.0);
+Ground ground(groundPos, groundSize, groundColor);
 
 int main(int argc, const char * argv[])
 {
@@ -73,6 +78,8 @@ int main(int argc, const char * argv[])
     
     /** Renderers **/
     // Render program definitions
+    GroundRender groundRender(&ground);
+    FluidRender fluidRender(&fluid);
     
     glEnable(GL_DEPTH_TEST);
     
@@ -89,6 +96,8 @@ int main(int argc, const char * argv[])
         /** -------------------------------- Simulation & Rendering -------------------------------- **/
         
         fluid.update(TIME_STEP, gravity);
+        groundRender.flush();
+        fluidRender.flush();
         
         /** -------------------------------- Simulation & Rendering -------------------------------- **/
         

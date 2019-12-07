@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#include "Vertex.h"
 #include "Fluid.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -40,13 +41,313 @@ Light sun;
 class FluidRender
 {
     const Fluid* fluid;
+    int numParticles;
     
+    glm::vec3 *vboPos; // Position
+    
+    GLuint programID;
+    GLuint vaoID;
+    GLuint vboIDs[1];
+    
+    GLint aPtrPos;
+    
+public:
     FluidRender(Fluid* fluid)
-    { }
-    
-    void destroy()
-    { }
+    {
+        numParticles = (int)(fluid->particles.size());
+        if (numParticles <= 0) {
+            std::cout << "ERROR::FluidRender : No particles exists." << std::endl;
+            exit(-1);
+        }
+        
+        this->fluid = fluid;
+        
+        vboPos = new glm::vec3[numParticles];
+        for (int i = 0; i < numParticles; i ++) {
+            Particle* p = fluid->particles[i];
+            vboPos[i] = glm::vec3(p->position.x, p->position.y, p->position.z);
+        }
+        
+        /** Build render program **/
+        Program program("Shaders/FluidVS.glsl", "Shaders/FluidFS.glsl");
+        programID = program.ID;
+        std::cout << "Fluid Program ID: " << programID << std::endl;
+
+        // Generate ID of VAO and VBOs
+        glGenVertexArrays(1, &vaoID);
+        glGenBuffers(1, vboIDs);
+        
+        // Attribute pointers of VAO
+        aPtrPos = 0;
+        // Bind VAO
+        glBindVertexArray(vaoID);
+        
+        // Position buffer
+        glBindBuffer(GL_ARRAY_BUFFER, vboIDs[0]);
+        glVertexAttribPointer(aPtrPos, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+        glBufferData(GL_ARRAY_BUFFER, numParticles*sizeof(glm::vec3), vboPos, GL_DYNAMIC_DRAW);
+        
+        // Enable it's attribute pointers since they were set well
+        glEnableVertexAttribArray(aPtrPos);
+        
+        /** Set uniform **/
+        glUseProgram(programID); // Active shader before set uniform
+        
+        /** Projection matrix : The frustum that camera observes **/
+        // Since projection matrix rarely changes, set it outside the rendering loop for only onec time
+        glUniformMatrix4fv(glGetUniformLocation(programID, "uniProjMatrix"), 1, GL_FALSE, &cam.uniProjMatrix[0][0]);
+        
+        /** Model Matrix : Put cloth into the world **/
+        glm::mat4 uniModelMatrix = glm::mat4(1.0f);
+        uniModelMatrix = glm::translate(uniModelMatrix, glm::vec3(fluid->boundary.position.x, fluid->boundary.position.y, fluid->boundary.position.z));
+        glUniformMatrix4fv(glGetUniformLocation(programID, "uniModelMatrix"), 1, GL_FALSE, &uniModelMatrix[0][0]);
+        
+        /** Light **/
+        glUniform3fv(glGetUniformLocation(programID, "uniLightPos"), 1, &(sun.pos[0]));
+        glUniform3fv(glGetUniformLocation(programID, "uniLightColor"), 1, &(sun.color[0]));
+
+        // Cleanup
+        glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbined VBO
+        glBindVertexArray(0); // Unbined VAO
+    }
+    ~FluidRender()
+    {
+        delete [] vboPos;
+        
+        if (vaoID)
+        {
+            glDeleteVertexArrays(1, &vaoID);
+            glDeleteBuffers(1, vboIDs);
+            vaoID = 0;
+        }
+        if (programID)
+        {
+            glDeleteProgram(programID);
+            programID = 0;
+        }
+    }
     
     void flush()
-    { }
+    {
+        glUseProgram(programID);
+        
+        glBindVertexArray(vaoID);
+        
+        glBindBuffer(GL_ARRAY_BUFFER, vboIDs[0]);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, numParticles*sizeof(glm::vec3), vboPos);
+        
+        /** View Matrix : The camera **/
+        cam.uniViewMatrix = glm::lookAt(cam.pos, cam.pos + cam.front, cam.up);
+        glUniformMatrix4fv(glGetUniformLocation(programID, "uniViewMatrix"), 1, GL_FALSE, &cam.uniViewMatrix[0][0]);
+        
+        glEnable(GL_BLEND);
+        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        
+        /** Draw **/
+        glPointSize(4);
+        glDrawArrays(GL_POINTS, 0, numParticles);
+        
+        // End flushing
+        glDisable(GL_BLEND);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+        glUseProgram(0);
+    }
+};
+
+class RigidRender // Single color & Lighting
+{
+    std::vector<Vertex*> faces;
+    int vertexCount; // Number of nodes in faces
+    
+    glm::vec4 uniRigidColor;
+    
+    glm::vec3 *vboPos; // Position
+    glm::vec3 *vboNor; // Normal
+
+    GLuint programID;
+    GLuint vaoID;
+    GLuint vboIDs[2];
+    
+    GLint aPtrPos;
+    GLint aPtrNor;
+    
+public:
+    RigidRender(std::vector<Vertex*> f, glm::vec4 c, glm::vec3 modelVec)
+    {
+        faces = f;
+        vertexCount = (int)(faces.size());
+        if (vertexCount <= 0) {
+            std::cout << "ERROR::RigidRender : No vertex exists." << std::endl;
+            exit(-1);
+        }
+        
+        uniRigidColor = c;
+        
+        vboPos = new glm::vec3[vertexCount];
+        vboNor = new glm::vec3[vertexCount];
+        for (int i = 0; i < vertexCount; i ++) {
+            Vertex* v = faces[i];
+            vboPos[i] = glm::vec3(v->position.x, v->position.y, v->position.z);
+            vboNor[i] = glm::vec3(v->normal.x, v->normal.y, v->normal.z);
+        }
+        
+        /** Build render program **/
+        Program program("Shaders/RigidVS.glsl", "Shaders/RigidFS.glsl");
+        programID = program.ID;
+        std::cout << "Rigid Program ID: " << programID << std::endl;
+
+        // Generate ID of VAO and VBOs
+        glGenVertexArrays(1, &vaoID);
+        glGenBuffers(2, vboIDs);
+        
+        // Attribute pointers of VAO
+        aPtrPos = 0;
+        aPtrNor = 1;
+        // Bind VAO
+        glBindVertexArray(vaoID);
+        
+        // Position buffer
+        glBindBuffer(GL_ARRAY_BUFFER, vboIDs[0]);
+        glVertexAttribPointer(aPtrPos, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+        glBufferData(GL_ARRAY_BUFFER, vertexCount*sizeof(glm::vec3), vboPos, GL_DYNAMIC_DRAW);
+        // Normal buffer
+        glBindBuffer(GL_ARRAY_BUFFER, vboIDs[1]);
+        glVertexAttribPointer(aPtrNor, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+        glBufferData(GL_ARRAY_BUFFER, vertexCount*sizeof(glm::vec3), vboNor, GL_DYNAMIC_DRAW);
+        
+        // Enable it's attribute pointers since they were set well
+        glEnableVertexAttribArray(aPtrPos);
+        glEnableVertexAttribArray(aPtrNor);
+        
+        /** Set uniform **/
+        glUseProgram(programID); // Active shader before set uniform
+        // Set color
+        glUniform4fv(glGetUniformLocation(programID, "uniRigidColor"), 1, &uniRigidColor[0]);
+        
+        /** Projection matrix : The frustum that camera observes **/
+        // Since projection matrix rarely changes, set it outside the rendering loop for only onec time
+        glUniformMatrix4fv(glGetUniformLocation(programID, "uniProjMatrix"), 1, GL_FALSE, &cam.uniProjMatrix[0][0]);
+        
+        /** Model Matrix : Put rigid into the world **/
+        glm::mat4 uniModelMatrix = glm::mat4(1.0f);
+        uniModelMatrix = glm::translate(uniModelMatrix, modelVec);
+        glUniformMatrix4fv(glGetUniformLocation(programID, "uniModelMatrix"), 1, GL_FALSE, &uniModelMatrix[0][0]);
+        
+        /** Light **/
+        glUniform3fv(glGetUniformLocation(programID, "uniLightPos"), 1, &(sun.pos[0]));
+        glUniform3fv(glGetUniformLocation(programID, "uniLightColor"), 1, &(sun.color[0]));
+
+        // Cleanup
+        glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbined VBO
+        glBindVertexArray(0); // Unbined VAO
+    }
+    ~RigidRender()
+    {
+        delete [] vboPos;
+        delete [] vboNor;
+        
+        if (vaoID)
+        {
+            glDeleteVertexArrays(1, &vaoID);
+            glDeleteBuffers(2, vboIDs);
+            vaoID = 0;
+        }
+        if (programID)
+        {
+            glDeleteProgram(programID);
+            programID = 0;
+        }
+    }
+    
+    void flush() // Rigid does not move, thus do not update vertexes' data
+    {
+        glUseProgram(programID);
+        
+        glBindVertexArray(vaoID);
+        
+        glBindBuffer(GL_ARRAY_BUFFER, vboIDs[0]);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, vertexCount*sizeof(glm::vec3), vboPos);
+        glBindBuffer(GL_ARRAY_BUFFER, vboIDs[1]);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, vertexCount*sizeof(glm::vec3), vboNor);
+        
+        /** View Matrix : The camera **/
+        cam.uniViewMatrix = glm::lookAt(cam.pos, cam.pos + cam.front, cam.up);
+        glUniformMatrix4fv(glGetUniformLocation(programID, "uniViewMatrix"), 1, GL_FALSE, &cam.uniViewMatrix[0][0]);
+        
+        glEnable(GL_BLEND);
+        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        
+        /** Draw **/
+        glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+        
+        // End flushing
+        glDisable(GL_BLEND);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+        glUseProgram(0);
+    }
+};
+
+struct Ground
+{
+    Vec3 position;
+    int width, height;
+    glm::vec4 color;
+    const double friction = 0.9;
+    
+    std::vector<Vertex*> vertexes;
+    std::vector<Vertex*> faces;
+    
+    Ground(Vec3 pos, Vec2 size, glm::vec4 c) {
+        position = pos;
+        width = size.x;
+        height = size.y;
+        color = c;
+        
+        init();
+    }
+    ~Ground()
+    {
+        for (int i = 0; i < vertexes.size(); i++) { delete vertexes[i]; }
+        vertexes.clear();
+        faces.clear();
+    }
+    
+    void init()
+    {
+        vertexes.push_back(new Vertex(Vec3(0.0, 0.0, 0.0)));
+        vertexes.push_back(new Vertex(Vec3(width, 0.0, 0.0)));
+        vertexes.push_back(new Vertex(Vec3(0.0, 0.0, -height)));
+        vertexes.push_back(new Vertex(Vec3(width, 0.0, -height)));
+        
+        for (int i = 0; i < vertexes.size(); i ++) {
+            vertexes[i]->normal = Vec3(0.0, 1.0, 0.0); // It's not neccessery to normalize here
+            
+            // Debug info
+            printf("Ground[%d]: (%f, %f, %f) - (%f, %f, %f)\n", i, vertexes[i]->position.x, vertexes[i]->position.y, vertexes[i]->position.z, vertexes[i]->normal.x, vertexes[i]->normal.y, vertexes[i]->normal.z);
+        }
+        
+        faces.push_back(vertexes[0]);
+        faces.push_back(vertexes[1]);
+        faces.push_back(vertexes[2]);
+        faces.push_back(vertexes[1]);
+        faces.push_back(vertexes[2]);
+        faces.push_back(vertexes[3]);
+    }
+};
+
+class GroundRender
+{
+public:
+    Ground *ground;
+    RigidRender *render;
+    
+    GroundRender(Ground* g)
+    {
+        ground = g;
+        render = new RigidRender(ground->faces, ground->color, glm::vec3(ground->position.x, ground->position.y, ground->position.z));
+    }
+    
+    void flush() { render->flush(); }
 };
