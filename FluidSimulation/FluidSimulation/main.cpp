@@ -21,26 +21,27 @@ void processInput(GLFWwindow *window);
 
 /** Callback functions **/
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
-void mouse_button_callback(GLFWwindow *window, int button, int action, int mods);
-void cursor_pos_callback(GLFWwindow *window, double xpos, double ypos);
 
 /** Global **/
 // Window and world
 GLFWwindow *window;
-glm::vec3 bgColor(100.0/255, 50.0/255, 60.0/255);
+glm::vec3 bgColor(200/255.0, 200/255.0, 200/255.0);
 // Fluid
-Boundary boundary(Vec3(-2.5, 0, -8), Vec3(10, 10, 10));
-Fluid fluid(&boundary, Vec3(5, 5, 5), Vec3(3, 3, 3), Vec3(5, 5, 0));
+Boundary boundary(Vec3(-3.25, -3, -9), Vec3(13, 13, 3));
+Vec3 fluidSize(3, 13, 3);
+Vec3 fluidPosOffset(0, 0, 0);
+Vec3 fluidInitVelocity(0, 0, 0);
+Fluid fluid(&boundary, fluidSize, fluidPosOffset, fluidInitVelocity);
 Vec3 gravity(0, -1, 0);
 // Ground
-Vec3 groundPos(-5, 0, -3);
-Vec2 groundSize(10, 10);
-glm::vec4 groundColor(0.8, 0.8, 0.8, 1.0);
+Vec3 groundPos(-10, -6.5, -9);
+Vec2 groundSize(20, 20);
+glm::vec4 groundColor(16/255.0, 176/255.0, 202/255.0, 0.3);
 Ground ground(groundPos, groundSize, groundColor);
 // Ball
-Vec3 ballPos(0, 2, -10);
+Vec3 ballPos(5, -1, -16.5);
 int ballRadius = 1;
-glm::vec4 ballColor(0.6f, 0.5f, 0.8f, 1.0f);
+glm::vec4 ballColor(70/255.0, 70/255.0, 200/255.0, 1.0f);
 Ball ball(ballPos, ballRadius, ballColor);
 
 int main(int argc, const char * argv[])
@@ -78,8 +79,6 @@ int main(int argc, const char * argv[])
     /** Register callback functions **/
     // Callback functions should be registered after creating window and before initializing render loop
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetMouseButtonCallback(window, mouse_button_callback);
-    glfwSetCursorPosCallback(window, cursor_pos_callback);
     
     /** Renderers **/
     // Render program definitions
@@ -102,8 +101,8 @@ int main(int argc, const char * argv[])
         
         /** -------------------------------- Simulation & Rendering -------------------------------- **/
         
-        fluid.update(TIME_STEP, gravity);
-//        groundRender.flush();
+        fluid.update(TIME_STEP, gravity, &ball);
+        groundRender.flush();
         fluidRender.flush();
         boundaryRender.flush();
         ballRender.flush();
@@ -124,27 +123,61 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
-{
-    if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
-    {
-    
-    }
-    if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
-    {
-        
-    }
-}
-
-void cursor_pos_callback(GLFWwindow* window, double xpos, double ypos)
-{
-    
-}
-
 void processInput(GLFWwindow *window)
 {
     /** Keyboard control **/ // If key did not get pressed it will return GLFW_RELEASE
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
+    }
+    
+    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+        cam.pos = glm::vec3(-14.0f, 10.0f, 1.0f);
+        cam.front = glm::vec3(1.5f, -1.0f, -2.0f);
+    }
+    if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
+        cam.pos = glm::vec3(17.0f, 13.0f, -12.0f);
+        cam.front = glm::vec3(-6.0f, -4.7f, -2.0f);
+    }
+    if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) {
+        cam.pos = glm::vec3(0.0f, 4.0f, 15.0f);
+        cam.front = glm::vec3(0.0f, 0.0f, -2.0f);
+    }
+    
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+        cam.front.x += cam.speed;
+    }
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+        cam.front.x -= cam.speed;
+    }
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+        cam.front.y += cam.speed;
+    }
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+        cam.front.y -= cam.speed;
+    }
+    
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        cam.pos.y += cam.speed*2;
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        cam.pos.y -= cam.speed*2;
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        cam.pos.x -= cam.speed*2;
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        cam.pos.x += cam.speed*2;
+    }
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+        cam.pos.z -= cam.speed*2;
+    }
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+        cam.pos.z += cam.speed*2;
+    }
+    
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+        printf("Camera:\n");
+        printf("\tPos: %f, %f, %f\n", cam.pos.x, cam.pos.y, cam.pos.z);
+        printf("\tFront %f, %f, %f\n", cam.front.x, cam.front.y, cam.front.z);
     }
 }

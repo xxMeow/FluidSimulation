@@ -5,7 +5,8 @@
 
 #include <math.h>
 
-#include "Particle.h"
+#include "Point.h"
+#include "Rigid.h"
 
 struct Boundary
 {
@@ -47,6 +48,7 @@ private:
     const double viscosity = 0.8;
     const double kernelRadius = 1.0;
 public:
+    const int particleSize = 20;
     Boundary* boundary;
     Vec3 position; // Left bottom back point's init position of fluid cube
     Vec3 size; // Size of fluid cube
@@ -103,12 +105,12 @@ public:
         particles.clear();
     }
     
-    void update(float timestep, Vec3 gravity)
+    void update(float timestep, Vec3 gravity, Ball* ball)
     {
         makeHashTable();
         computeDensity();
         computeForce();
-        integrate(timestep, gravity);
+        integrate(timestep, gravity, ball);
     }
 
 private:
@@ -120,7 +122,7 @@ private:
         for (double z = position.z; z < position.z+size.z; z += distInterval) {
             for (double y = position.y; y < position.y+size.y; y += distInterval) {
                 for (double x = position.x; x < position.x+size.x; x += distInterval) {
-                    Particle *p = new Particle(index, Vec3(x, y, z));
+                    Particle *p = new Particle(index, Vec3((x-boundary->position.x)/boundary->size.x*1.9, (y-boundary->position.y)/boundary->size.y/1.5, (z-boundary->position.z)/boundary->size.z/1.2), Vec3(x, y, z)); // TODO: set color
                     p->velocity = initV;
                     particles.push_back(p);
                     index ++;
@@ -194,8 +196,6 @@ private:
                             Particle* pj = neighbors[j];
                             pi->density += pj->mass * poly6Kernel(pi->position - pj->position);
                         }
-                        
-//                        printf("[%d] Density: %f\n", pi->index, pi->density);
                     }
                 }
             }
@@ -232,7 +232,9 @@ private:
             }
         }
     }
-    void integrate(double timestep, Vec3 gravity)
+    Vec3 getWorldPos(Particle* p) { return boundary->position + p->position; }
+    void setWorldPos(Particle* p, Vec3 pos) { p->position = pos - boundary->position; }
+    void integrate(double timestep, Vec3 gravity, Ball* ball)
     {
         for (int i = 0; i < particles.size(); i++)
         {
@@ -244,35 +246,47 @@ private:
             p->position += p->velocity * timestep;
             
             /** Boundary Check **/
-            if (p->position.x < boundary->xMin && p->velocity.x < 0.0)
             {
-                p->velocity.x *= -(p->restitution);
-                p->position.x = boundary->xMin+0.1;
+                double pRadius = particleSize/90.0;
+                if (p->position.x < boundary->xMin && p->velocity.x < 0.0)
+                {
+                    p->velocity.x *= -(p->restitution);
+                    p->position.x = boundary->xMin+pRadius+0.1;
+                }
+                if (p->position.x > boundary->xMax && p->velocity.x > 0.0)
+                {
+                    p->velocity.x *= -(p->restitution);
+                    p->position.x = boundary->xMax-pRadius-0.1;
+                }
+                if (p->position.y < boundary->yMin && p->velocity.y < 0.0)
+                {
+                    p->velocity.y *= -(p->restitution);
+                    p->position.y = boundary->yMin+pRadius+0.1;
+                }
+                if (p->position.y > boundary->yMax && p->velocity.y > 0.0)
+                {
+                    p->velocity.y *= -(p->restitution);
+                    p->position.y = boundary->yMax-pRadius-0.2;
+                }
+                if (p->position.z < boundary->zMin && p->velocity.z < 0.0)
+                {
+                    p->velocity.z *= -(p->restitution);
+                    p->position.z = boundary->zMin+pRadius+0.1;
+                }
+                if (p->position.z > boundary->zMax && p->velocity.z > 0.0)
+                {
+                    p->velocity.z *= -(p->restitution);
+                    p->position.z = boundary->zMax-pRadius-0.1;
+                }
             }
-            if (p->position.x > boundary->xMax && p->velocity.x > 0.0)
-            {
-                p->velocity.x *= -(p->restitution);
-                p->position.x = boundary->xMax-0.1;
-            }
-            if (p->position.y < boundary->yMin && p->velocity.y < 0.0)
-            {
-                p->velocity.y *= -(p->restitution);
-                p->position.y = boundary->yMin+0.1;
-            }
-            if (p->position.y > boundary->yMax && p->velocity.y > 0.0)
-            {
-                p->velocity.y *= -(p->restitution);
-                p->position.y = boundary->yMax-0.1;
-            }
-            if (p->position.z < boundary->zMin && p->velocity.z < 0.0)
-            {
-                p->velocity.z *= -(p->restitution);
-                p->position.z = boundary->zMin+0.1;
-            }
-            if (p->position.z > boundary->zMax && p->velocity.z > 0.0)
-            {
-                p->velocity.z *= -(p->restitution);
-                p->position.z = boundary->zMax-0.1;
+            
+            /** Collision check **/
+            Vec3 distVec = getWorldPos(p) - ball->center;
+            double distLen = distVec.len();
+            double safeDist = (ball->radius + particleSize/100.0)*1.05;
+            if (distLen < safeDist) {
+                distVec.nor();
+                setWorldPos(p, distVec*safeDist+ball->center);
             }
         }
     }

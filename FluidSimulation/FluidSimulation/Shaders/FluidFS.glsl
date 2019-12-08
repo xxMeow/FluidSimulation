@@ -1,5 +1,7 @@
 #version 330 core
 
+in vec3 fsColor;
+
 out vec4 color;
 
 uniform vec3 uniLightPos;
@@ -13,5 +15,5 @@ void main()
     float mag = dot(normal.xy, normal.xy);
     if(mag > 1.0) discard;
     
-    color = vec4(0.5, 0.7, 0.9, 0.2f);
+    color = vec4(fsColor.x, fsColor.y, fsColor.z, 0.6f);
 }

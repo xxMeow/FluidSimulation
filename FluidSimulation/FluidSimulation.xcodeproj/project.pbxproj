@@ -27,19 +27,17 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		CA6028CD2393E78B00DF7A46 /* Particle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Particle.h; sourceTree = "<group>"; };
+		CA6028CD2393E78B00DF7A46 /* Point.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Point.h; sourceTree = "<group>"; };
 		CA6028CE2393E96100DF7A46 /* Vector.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Vector.h; sourceTree = "<group>"; };
 		CA6028D02394D85300DF7A46 /* Fluid.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Fluid.h; sourceTree = "<group>"; };
 		CA7915AF23963A69009A6690 /* FluidVS.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = FluidVS.glsl; sourceTree = "<group>"; };
 		CA7915B023963A77009A6690 /* FluidFS.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = FluidFS.glsl; sourceTree = "<group>"; };
 		CA7915B123964785009A6690 /* Display.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Display.h; sourceTree = "<group>"; };
-		CA7915B223964DBD009A6690 /* stb_image.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stb_image.h; sourceTree = "<group>"; };
-		CA7915B42399C50B009A6690 /* tex1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = tex1.jpg; sourceTree = "<group>"; };
-		CA7915B5239AB834009A6690 /* Vertex.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Vertex.h; sourceTree = "<group>"; };
 		CA7915B7239AB98C009A6690 /* RigidVS.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = RigidVS.glsl; sourceTree = "<group>"; };
 		CA7915B8239AB999009A6690 /* RigidFS.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = RigidFS.glsl; sourceTree = "<group>"; };
 		CA7915B9239BFB8C009A6690 /* BoundaryVS.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = BoundaryVS.glsl; sourceTree = "<group>"; };
 		CA7915BA239BFB98009A6690 /* BoundaryFS.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = BoundaryFS.glsl; sourceTree = "<group>"; };
+		CA7915DE239D8C85009A6690 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
 		CAB8982D2393C65E001103FE /* FluidSimulation */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FluidSimulation; sourceTree = BUILT_PRODUCTS_DIR; };
 		CAB898302393C65E001103FE /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		CAB898372393C694001103FE /* glad.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glad.c; sourceTree = "<group>"; };
@@ -48,6 +46,7 @@
 		CAB8983E2393C715001103FE /* libglfw.3.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw.3.3.dylib; path = ../../../../../usr/local/Cellar/glfw/3.3/lib/libglfw.3.3.dylib; sourceTree = "<group>"; };
 		CAB898402393C7CF001103FE /* FluidSimulation.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FluidSimulation.entitlements; sourceTree = "<group>"; };
 		CAB898442393C9A8001103FE /* Program.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Program.h; sourceTree = "<group>"; };
+		CAFCAEF2239D98F200684B97 /* Rigid.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Rigid.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,14 +63,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		CA7915B32399C3F5009A6690 /* Textures */ = {
-			isa = PBXGroup;
-			children = (
-				CA7915B42399C50B009A6690 /* tex1.jpg */,
-			);
-			path = Textures;
-			sourceTree = "<group>";
-		};
 		CAB898242393C65E001103FE = {
 			isa = PBXGroup;
 			children = (
@@ -97,7 +88,6 @@
 				CAB898372393C694001103FE /* glad.c */,
 				CAB898422393C884001103FE /* Headers */,
 				CAB898432393C893001103FE /* Shaders */,
-				CA7915B32399C3F5009A6690 /* Textures */,
 			);
 			path = FluidSimulation;
 			sourceTree = "<group>";
@@ -105,6 +95,7 @@
 		CAB898392393C6A9001103FE /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				CA7915DE239D8C85009A6690 /* GLUT.framework */,
 				CAB8983E2393C715001103FE /* libglfw.3.3.dylib */,
 				CAB8983C2393C6FA001103FE /* libGLEW.2.1.0.dylib */,
 				CAB8983A2393C6A9001103FE /* OpenGL.framework */,
@@ -116,12 +107,11 @@
 			isa = PBXGroup;
 			children = (
 				CA6028CE2393E96100DF7A46 /* Vector.h */,
-				CA6028CD2393E78B00DF7A46 /* Particle.h */,
+				CA6028CD2393E78B00DF7A46 /* Point.h */,
+				CAFCAEF2239D98F200684B97 /* Rigid.h */,
 				CA6028D02394D85300DF7A46 /* Fluid.h */,
-				CA7915B223964DBD009A6690 /* stb_image.h */,
 				CAB898442393C9A8001103FE /* Program.h */,
 				CA7915B123964785009A6690 /* Display.h */,
-				CA7915B5239AB834009A6690 /* Vertex.h */,
 			);
 			path = Headers;
 			sourceTree = "<group>";
@@ -249,6 +239,7 @@
 					"$(inherited)",
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
@@ -301,6 +292,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
