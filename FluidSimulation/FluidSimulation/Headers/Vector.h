@@ -93,8 +93,7 @@ struct Vec3
 
     double len() { return sqrt(x*x + y*y + z*z); }
     double dst(Vec3 v) { return sqrt(pow(x-v.x, 2) + pow(y-v.y, 2) + pow(z-v.z, 2)); }
-    
-    void Normalize()
+    void nor()
     {
         double w = len();
         if (w < 0.00001) return;

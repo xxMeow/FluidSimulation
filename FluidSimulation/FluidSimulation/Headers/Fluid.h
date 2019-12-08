@@ -105,23 +105,10 @@ public:
     
     void update(float timestep, Vec3 gravity)
     {
-//        printf("Updating..\n");
-        
-//        printf("\tMaking Hash Table..\n");
         makeHashTable();
-//        printf("\t(%f, %f, %f)\n", particles[0]->position.x, particles[0]->position.y, particles[0]->position.z);
-        
-//        printf("\tComputing Density..\n");
         computeDensity();
-//        printf("\t(%f, %f, %f)\n", particles[0]->position.x, particles[0]->position.y, particles[0]->position.z);
-        
-//        printf("\tComputing Force..\n");
         computeForce();
-//        printf("\t(%f, %f, %f)\n", particles[0]->position.x, particles[0]->position.y, particles[0]->position.z);
-        
-//        printf("\tIntegrating..\n");
         integrate(timestep, gravity);
-//        printf("\t(%f, %f, %f)\n", particles[0]->position.x, particles[0]->position.y, particles[0]->position.z);
     }
 
 private:
@@ -233,19 +220,13 @@ private:
                             Particle* pj = neighbors[j];
                             Vec3 spikyValue = spikyGradientKernel(pi->position - pj->position);
                             temp = pj->mass * (gasConst * ((pi->density-restDensity) + pj->density - restDensity)) / (2.0 * pj->density);
-//                            printf("Spiky: %f, %f, %f  *  temp: %f\n", spikyValue.x, spikyValue.y, spikyValue.z, temp);
                             pi->fPressure += spikyValue * temp;
                             double laplacValue = viscosityLaplacianKernel(pi->position - pj->position);
-//                            printf("Laplac: %f\n", laplacValue);
                             pi->fViscosity += pj->mass * ((pi->velocity - pj->velocity) / pj->density) * laplacValue;
-//                            printf("[%d] fPressure(%f, %f, %f)", pi->index, pi->fPressure.x, pi->fPressure.y, pi->fPressure.z);
-//                            printf(" fViscosity(%f, %f, %f)\n", pi->fViscosity.x, pi->fViscosity.y, pi->fViscosity.z);
                         }
                         
                         pi->fPressure = -1.0 * pi->fPressure;
-//                        printf("[%d] fPressure(%f, %f, %f)", pi->index, pi->fPressure.x, pi->fPressure.y, pi->fPressure.z);
                         pi->fViscosity = viscosity * pi->fViscosity;
-//                        printf(" fViscosity(%f, %f, %f)\n", pi->fViscosity.x, pi->fViscosity.y, pi->fViscosity.z);
                     }
                 }
             }
@@ -253,18 +234,14 @@ private:
     }
     void integrate(double timestep, Vec3 gravity)
     {
-//        printf("%f : (%f, %f, %f)\n", timestep, gravity.x, gravity.y, gravity.z);
-        // Particle bondary check
         for (int i = 0; i < particles.size(); i++)
         {
             Particle *p = particles[i];
-//            printf("[%d] (%f, %f, %f) -> ", p->index, p->position.x, p->position.y, p->position.z);
             Vec3 fGravity = p->mass * gravity;
             // Update velocity and position
             p->acceleration = (p->fPressure + p->fViscosity) / p->density + fGravity;
             p->velocity += p->acceleration * timestep;
             p->position += p->velocity * timestep;
-//            printf("(%f, %f, %f)\n", p->position.x, p->position.y, p->position.z);
             
             /** Boundary Check **/
             if (p->position.x < boundary->xMin && p->velocity.x < 0.0)

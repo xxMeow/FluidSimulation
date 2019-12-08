@@ -30,7 +30,7 @@ GLFWwindow *window;
 glm::vec3 bgColor(100.0/255, 50.0/255, 60.0/255);
 // Fluid
 Boundary boundary(Vec3(-2.5, 0, -8), Vec3(10, 10, 10));
-Fluid fluid(&boundary, Vec3(5, 5, 5), Vec3(1, 4, 3), Vec3(2, 0, 0));
+Fluid fluid(&boundary, Vec3(5, 5, 5), Vec3(3, 3, 3), Vec3(5, 5, 0));
 Vec3 gravity(0, -1, 0);
 // Ground
 Vec3 groundPos(-5, 0, -3);
