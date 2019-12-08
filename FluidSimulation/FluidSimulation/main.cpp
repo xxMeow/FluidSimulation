@@ -37,6 +37,11 @@ Vec3 groundPos(-5, 0, -3);
 Vec2 groundSize(10, 10);
 glm::vec4 groundColor(0.8, 0.8, 0.8, 1.0);
 Ground ground(groundPos, groundSize, groundColor);
+// Ball
+Vec3 ballPos(0, 2, -10);
+int ballRadius = 1;
+glm::vec4 ballColor(0.6f, 0.5f, 0.8f, 1.0f);
+Ball ball(ballPos, ballRadius, ballColor);
 
 int main(int argc, const char * argv[])
 {
@@ -81,6 +86,7 @@ int main(int argc, const char * argv[])
     GroundRender groundRender(&ground);
     FluidRender fluidRender(&fluid);
     BoundaryRender boundaryRender(&boundary);
+    BallRender ballRender(&ball);
     
     glEnable(GL_DEPTH_TEST);
     
@@ -100,6 +106,7 @@ int main(int argc, const char * argv[])
 //        groundRender.flush();
         fluidRender.flush();
         boundaryRender.flush();
+        ballRender.flush();
         
         /** -------------------------------- Simulation & Rendering -------------------------------- **/
         

@@ -337,11 +337,11 @@ public:
         glUniformMatrix4fv(glGetUniformLocation(programID, "uniViewMatrix"), 1, GL_FALSE, &cam.uniViewMatrix[0][0]);
         
         glEnable(GL_BLEND);
-//        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); TODO: which blend mode?
-        glBlendFunc(GL_ONE, GL_ONE);
+        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // TODO: which blend mode?
+//        glBlendFunc(GL_ONE, GL_ONE);
         
         /** Draw **/
-        glPointSize(6);
+        glPointSize(100);
         glDrawArrays(GL_POINTS, 0, numParticles);
         
         // End flushing
@@ -553,7 +553,7 @@ class Sphere
 {
 public:
     const int meridianNum = 24;
-    const int parallelNum = 25; // 250
+    const int parallelNum = 250;
     
     int radius;
     
