@@ -23,25 +23,27 @@ void processInput(GLFWwindow *window);
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 
 /** Global **/
+// Flow control
+int running = 0;
 // Window and world
 GLFWwindow *window;
 glm::vec3 bgColor(200/255.0, 200/255.0, 200/255.0);
 // Fluid
-Boundary boundary(Vec3(-3.25, -3, -9), Vec3(13, 13, 3));
-Vec3 fluidSize(3, 13, 3);
-Vec3 fluidPosOffset(0, 0, 0);
-Vec3 fluidInitVelocity(0, 0, 0);
+Boundary boundary(Vec3(-3.25, -2, -12), Vec3(13, 13, 13));
+Vec3 fluidSize(6, 6, 6);
+Vec3 fluidPosOffset(0, 6, 2);
+Vec3 fluidInitVelocity(7, 0, 0);
 Fluid fluid(&boundary, fluidSize, fluidPosOffset, fluidInitVelocity);
 Vec3 gravity(0, -1, 0);
 // Ground
-Vec3 groundPos(-10, -6.5, -9);
-Vec2 groundSize(20, 20);
+Vec3 groundPos(-20, -6.5, -8);
+Vec2 groundSize(40, 40);
 glm::vec4 groundColor(16/255.0, 176/255.0, 202/255.0, 0.3);
 Ground ground(groundPos, groundSize, groundColor);
 // Ball
-Vec3 ballPos(5, -1, -16.5);
-int ballRadius = 1;
-glm::vec4 ballColor(70/255.0, 70/255.0, 200/255.0, 1.0f);
+Vec3 ballPos(5, 5, -17);
+int ballRadius = 2;
+glm::vec4 ballColor(150/255.0, 150/255.0, 240/255.0, 1.0f);
 Ball ball(ballPos, ballRadius, ballColor);
 
 int main(int argc, const char * argv[])
@@ -101,7 +103,9 @@ int main(int argc, const char * argv[])
         
         /** -------------------------------- Simulation & Rendering -------------------------------- **/
         
-        fluid.update(TIME_STEP, gravity, &ball);
+        if (running) { // Anything that affects the simulation should be added here
+            fluid.update(TIME_STEP, gravity, &ball);
+        }
         groundRender.flush();
         fluidRender.flush();
         boundaryRender.flush();
@@ -128,6 +132,13 @@ void processInput(GLFWwindow *window)
     /** Keyboard control **/ // If key did not get pressed it will return GLFW_RELEASE
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
+    }
+    
+    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+        running = 1;
+    }
+    if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS) {
+        running = 0;
     }
     
     if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
